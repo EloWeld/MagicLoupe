@@ -1,6 +1,16 @@
 # Magic Loupe
 
+<p align="center">
+  <img src="https://img.shields.io/badge/macOS-14%2B-000000?logo=apple&logoColor=white" alt="macOS 14+">
+  <img src="https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white" alt="Swift 6">
+  <img src="https://img.shields.io/badge/license-MIT-3DA639" alt="MIT license">
+</p>
+
 A menu-bar loupe for macOS. Frame any on-screen text, translate it, and leave the translation sitting on top of the original — same place, same size, under glass.
+
+<p align="center">
+  <img src="docs/demo.gif" alt="Magic Loupe framing a Discord thread and overlaying a Russian, then Japanese, translation" width="720">
+</p>
 
 The app lives in the menu bar. There is no Dock icon.
 
