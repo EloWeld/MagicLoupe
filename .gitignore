@@ -1,0 +1,17 @@
+.build/
+.swiftpm/
+dist/
+.DS_Store
+*.xcodeproj
+xcuserdata/
+*.xcuserstate
+.idea/
+
+.env
+.env.*
+*.p12
+*.cer
+*.p8
+*.mobileprovision
+AuthKey_*.p8
+
