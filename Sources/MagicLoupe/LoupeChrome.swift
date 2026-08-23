@@ -37,6 +37,16 @@ enum LoupeChrome {
     }
 }
 
+extension NSView {
+    /// Layer-backed views default to an opaque black backing store; the loupe
+    /// hole must stay a true punch-through.
+    func punchClearLayer() {
+        wantsLayer = true
+        layer?.isOpaque = false
+        layer?.backgroundColor = NSColor.clear.cgColor
+    }
+}
+
 enum GlassWeight {
     case chrome
     case obscure
@@ -60,14 +70,16 @@ final class GlassBackdrop: NSView {
         self.weight = weight
         self.cornerRadius = cornerRadius
         super.init(frame: .zero)
-        wantsLayer = true
+        punchClearLayer()
         layer?.masksToBounds = true
-        contentView.wantsLayer = true
-        wash.wantsLayer = true
+        contentView.punchClearLayer()
+        wash.punchClearLayer()
         wash.autoresizingMask = [.width, .height]
         buildPlate()
         applyChrome()
     }
+
+    override var isOpaque: Bool { false }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { nil }
@@ -113,9 +125,7 @@ final class GlassBackdrop: NSView {
         if #available(macOS 26.0, *) {
             if let glass = plate as? NSGlassEffectView {
                 glass.cornerRadius = cornerRadius
-                if let tint {
-                    glass.tintColor = tint
-                }
+                glass.tintColor = tint
             }
             wash.layer?.backgroundColor = NSColor.clear.cgColor
         } else {

@@ -15,6 +15,7 @@ final class LoupeController {
     private let moveDebounce = Debouncer()
     private var pollTask: Task<Void, Never>?
     private var notifications: [NSObjectProtocol] = []
+    private var appliedSkin: LoupeSkin?
 
     var contentRectInWindow: CGRect {
         overlayView.convert(overlayView.bounds, to: nil)
@@ -28,6 +29,7 @@ final class LoupeController {
             animated: true
         )
         overlayView.setBusy(model.status == .translating && model.overlayBlocks.isEmpty)
+        headerBar.setBusy(model.status == .translating && model.overlayBlocks.isEmpty)
     }
 
     init(model: AppModel) {
@@ -51,11 +53,17 @@ final class LoupeController {
             self.model.isLocked.toggle()
             self.model.persist()
         }
+        headerBar.onToggleSkin = { [weak self] in
+            guard let self else { return }
+            self.model.skin = self.model.skin == .glass ? .colorLens : .glass
+            self.model.persist()
+        }
         headerBar.onLanguageChange = { [weak self] language in
             guard let self else { return }
             self.model.targetLanguage = language
             self.model.persist()
         }
+        headerBar.applySkin(model.skin)
         headerBar.sync(from: model)
 
         panel.contentView = rootView
@@ -146,6 +154,7 @@ final class LoupeController {
             _ = model.isLoupeVisible
             _ = model.targetLanguage
             _ = model.status
+            _ = model.skin
         } onChange: { [weak self] in
             Task { @MainActor in
                 self?.applyModel()
@@ -155,6 +164,13 @@ final class LoupeController {
     }
 
     private func applyModel() {
+        if appliedSkin != model.skin {
+            appliedSkin = model.skin
+            rootView.applySkin(model.skin)
+            headerBar.applySkin(model.skin)
+            overlayView.applySkin(model.skin)
+            panel?.minSize = model.skin.minSize
+        }
         overlayView.apply(
             model.overlayBlocks,
             script: ScriptKind.of(model.targetLanguage),
@@ -162,6 +178,7 @@ final class LoupeController {
             animated: true
         )
         overlayView.setBusy(model.status == .translating && model.overlayBlocks.isEmpty)
+        headerBar.setBusy(model.status == .translating && model.overlayBlocks.isEmpty)
         headerBar.sync(from: model)
         rootView.window?.invalidateCursorRects(for: rootView)
 

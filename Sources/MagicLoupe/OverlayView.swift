@@ -5,15 +5,17 @@ final class OverlayView: NSView {
     private var presented: [OverlayBlock] = []
     private var locked = true
     private var script: ScriptKind = .latin
+    private var skin: LoupeSkin = .glass
     private let shimmer = TranslationShimmerView()
 
     override var isFlipped: Bool { true }
+    override var isOpaque: Bool { false }
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        wantsLayer = true
+        punchClearLayer()
         addSubview(shimmer)
     }
 
@@ -25,8 +27,19 @@ final class OverlayView: NSView {
         shimmer.frame = bounds
     }
 
+    func applySkin(_ skin: LoupeSkin) {
+        self.skin = skin
+        shimmer.applySkin(skin)
+        for chip in chips.values {
+            chip.skin = skin
+        }
+        for block in presented {
+            chips[block.id]?.configure(block, script: script, locked: locked)
+        }
+    }
+
     func setBusy(_ busy: Bool) {
-        shimmer.setActive(busy)
+        shimmer.setActive(busy && skin == .glass)
     }
 
     func apply(
@@ -57,6 +70,7 @@ final class OverlayView: NSView {
                 continue
             }
             let chip = OverlayBlockView()
+            chip.skin = skin
             chip.alphaValue = 0
             chip.configure(block, script: script, locked: locked)
             addSubview(chip)
@@ -121,14 +135,16 @@ final class OverlayView: NSView {
 }
 
 final class OverlayBlockView: NSView {
+    var skin: LoupeSkin = .glass
     private let plate = GlassBackdrop(weight: .obscure, cornerRadius: LoupeChrome.chipRadius)
     private let field = NSTextField()
 
     override var isFlipped: Bool { true }
+    override var isOpaque: Bool { false }
 
     init() {
         super.init(frame: .zero)
-        wantsLayer = true
+        punchClearLayer()
         plate.translatesAutoresizingMaskIntoConstraints = false
         addSubview(plate)
         NSLayoutConstraint.activate([
@@ -148,12 +164,12 @@ final class OverlayBlockView: NSView {
         field.cell?.isScrollable = false
         field.lineBreakMode = .byWordWrapping
         field.translatesAutoresizingMaskIntoConstraints = false
-        plate.contentView.addSubview(field)
+        addSubview(field)
         NSLayoutConstraint.activate([
-            field.topAnchor.constraint(equalTo: plate.contentView.topAnchor, constant: 1),
-            field.leadingAnchor.constraint(equalTo: plate.contentView.leadingAnchor, constant: 4),
-            field.trailingAnchor.constraint(equalTo: plate.contentView.trailingAnchor, constant: -4),
-            field.bottomAnchor.constraint(equalTo: plate.contentView.bottomAnchor, constant: -1),
+            field.topAnchor.constraint(equalTo: topAnchor, constant: 1),
+            field.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 4),
+            field.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -4),
+            field.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -1),
         ])
     }
 
@@ -162,15 +178,18 @@ final class OverlayBlockView: NSView {
 
     func configure(_ block: OverlayBlock, script: ScriptKind, locked: Bool) {
         frame = block.rect.insetBy(dx: -2, dy: -1).integral
-        plate.cornerRadius = min(LoupeChrome.chipRadius, max(4, bounds.height * 0.22))
+        plate.isHidden = false
+        plate.cornerRadius = min(skin.chipRadius, max(4, bounds.height * 0.22))
         plate.tint = block.background.nsColor
         if block.background.luma > 0.55 {
             appearance = NSAppearance(named: .vibrantLight)
         } else {
             appearance = NSAppearance(named: .vibrantDark)
         }
+        field.font = skin == .colorLens
+            ? PixelFont.overlay(size: block.fontSize, script: script)
+            : block.family.nsFont(size: block.fontSize, script: script)
         field.stringValue = block.translatedText
-        field.font = block.family.nsFont(size: block.fontSize, script: script)
         field.textColor = block.foreground.nsColor
         field.isSelectable = locked
         field.toolTip = locked ? block.sourceText : nil
@@ -186,10 +205,11 @@ final class TranslationShimmerView: NSView {
     private var lastSize: CGSize = .zero
 
     override var isFlipped: Bool { true }
+    override var isOpaque: Bool { false }
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        wantsLayer = true
+        punchClearLayer()
         layer?.masksToBounds = true
         wash.backgroundColor = NSColor.white.withAlphaComponent(0.04).cgColor
         layer?.addSublayer(wash)
@@ -236,6 +256,15 @@ final class TranslationShimmerView: NSView {
         lastSize = bounds.size
         if running, grown {
             attachAnimation()
+        }
+    }
+
+    func applySkin(_ skin: LoupeSkin) {
+        wash.isHidden = skin != .glass
+        gleam.isHidden = skin != .glass
+        emitter.isHidden = skin != .glass
+        if skin != .glass {
+            setActive(false)
         }
     }
 

@@ -5,6 +5,7 @@ import SwiftUI
 enum MagicLoupeEntry {
     nonisolated(unsafe) static var retainedDelegate: AppDelegate?
 
+    @MainActor
     static func main() {
         let app = NSApplication.shared
         app.setActivationPolicy(.accessory)
@@ -24,6 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusMenu: NSMenu?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        PixelFont.register()
         PermissionSession.start()
         installStatusItem()
         Task { @MainActor in
@@ -76,8 +78,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
 
         let menu = NSMenu()
-        menu.addItem(makeMenuItem("Перевести", #selector(translate)))
+        let translateItem = makeMenuItem("Перевести", #selector(translate))
+        translateItem.image = NSImage(systemSymbolName: "translate", accessibilityDescription: "Перевести")
+        menu.addItem(translateItem)
         menu.addItem(.separator())
+        let appearance = NSMenu(title: "Оформление")
+        for skin in LoupeSkin.allCases {
+            let item = NSMenuItem(title: skin.title, action: #selector(setSkin(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = skin.rawValue
+            appearance.addItem(item)
+        }
+        let appearanceItem = NSMenuItem(title: "Оформление", action: nil, keyEquivalent: "")
+        appearanceItem.submenu = appearance
+        menu.addItem(appearanceItem)
         menu.addItem(makeMenuItem("Настройки…", #selector(openSettings), ","))
         menu.addItem(makeMenuItem("Перезапустить", #selector(relaunch)))
         menu.addItem(.separator())
@@ -115,6 +129,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         model.isLoupeVisible = true
     }
 
+    @objc private func setSkin(_ sender: NSMenuItem) {
+        Task { @MainActor in
+            guard self.model != nil,
+                  let raw = sender.representedObject as? String,
+                  let skin = LoupeSkin(rawValue: raw)
+            else { return }
+            self.model.skin = skin
+            self.model.persist()
+        }
+    }
+
     @objc private func translate() {
         Task { @MainActor in
             guard self.model != nil, self.pipeline != nil else { return }
@@ -125,6 +150,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self.model.isLoupeVisible = true
             self.pipeline.translateNow()
         }
+    }
+
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem.action == #selector(setSkin(_:)) {
+            menuItem.state = (menuItem.representedObject as? String) == model?.skin.rawValue ? .on : .off
+        }
+        return true
     }
 
     @objc private func openSettings() {

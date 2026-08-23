@@ -57,6 +57,20 @@ struct SettingsView: View {
                 }
             }
 
+            Section("Оформление") {
+                Picker("Скин", selection: $model.skin) {
+                    ForEach(LoupeSkin.allCases) { skin in
+                        Text(skin.title).tag(skin)
+                    }
+                }
+                .onChange(of: model.skin) { _, _ in
+                    model.persist()
+                }
+                Text(model.skin.detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             Section("Разрешения macOS") {
                 ForEach(AppPermission.allCases) { permission in
                     PermissionStatusRow(permission: permission)

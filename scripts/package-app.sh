@@ -33,6 +33,10 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BINARY" "$APP/Contents/MacOS/MagicLoupe"
 cp "$INFOPLIST" "$APP/Contents/Info.plist"
 printf 'APPL????' > "$APP/Contents/PkgInfo"
+if [[ -d "$ROOT/Resources/Fonts" ]]; then
+  cp "$ROOT/Resources/Fonts/"*.ttf "$APP/Contents/Resources/" 2>/dev/null || true
+  cp "$ROOT/Resources/Fonts/"OFL*.txt "$APP/Contents/Resources/" 2>/dev/null || true
+fi
 
 resolve_identity() {
   if [[ -n "${CODESIGN_IDENTITY:-}" ]]; then
