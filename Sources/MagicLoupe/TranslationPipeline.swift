@@ -72,13 +72,14 @@ final class TranslationPipeline {
 
             let lines = try await TextRecognizer.recognize(image: image, viewSize: rect.size)
             try Task.checkCancellation()
-            let blocks = TextBlockGrouper.group(lines)
+            var blocks = TextBlockGrouper.group(lines)
 
-            if blocks.isEmpty {
-                model.overlayBlocks = []
-                lastStableHash = ImageHasher.averageHash(image)
-                model.status = .idle
-                return
+            // Vision found nothing: either no text, or a script it can't read (Georgian).
+            // The model gets the picture and answers with one block over the whole frame.
+            // ponytail: no per-line layout here; ask the model for boxes if it matters.
+            let readByModel = blocks.isEmpty
+            if readByModel {
+                blocks = [OCRBlock(id: 0, text: "", rect: CGRect(origin: .zero, size: rect.size), family: .sans)]
             }
 
             let scaleX = CGFloat(image.width) / rect.width
@@ -109,10 +110,18 @@ final class TranslationPipeline {
             model.status = .translating
             let apiKey = try KeychainStore.load()
             let client = OpenRouterClient(apiKey: apiKey, model: model.modelSlug)
-            let translated = try await client.translate(
-                blocks: blocks.map { (id: $0.id, text: $0.text) },
-                to: model.targetLanguage
-            )
+            let translated: [Int: String]
+            if readByModel {
+                guard let jpeg = NSBitmapImageRep(cgImage: image)
+                    .representation(using: .jpeg, properties: [.compressionFactor: 0.85])
+                else { throw OpenRouterError.emptyResponse }
+                translated = try await client.translate(image: jpeg, to: model.targetLanguage)
+            } else {
+                translated = try await client.translate(
+                    blocks: blocks.map { (id: $0.id, text: $0.text) },
+                    to: model.targetLanguage
+                )
+            }
             try Task.checkCancellation()
 
             for i in overlay.indices {
@@ -126,6 +135,7 @@ final class TranslationPipeline {
                     rect: overlay[i].rect
                 )
             }
+            overlay.removeAll { $0.translatedText.isEmpty }
 
             model.overlayBlocks = overlay
             loupe.flushOverlay()

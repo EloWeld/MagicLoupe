@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:MagicLoupe}",
+            "name": "Debug MagicLoupe",
+            "target": "MagicLoupe",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug MagicLoupe"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:MagicLoupe}",
+            "name": "Release MagicLoupe",
+            "target": "MagicLoupe",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release MagicLoupe"
+        }
+    ]
+}

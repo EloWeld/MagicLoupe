@@ -16,7 +16,7 @@ enum TranslateMode: String, CaseIterable, Identifiable, Sendable {
 }
 
 enum TargetLanguage: String, CaseIterable, Identifiable, Sendable {
-    case ru, en, zh, de, fr, es, ja, pt, it, ko
+    case ru, en, zh, de, fr, es, ja, pt, it, ko, th, ka
 
     var id: String { rawValue }
 
@@ -34,6 +34,8 @@ enum TargetLanguage: String, CaseIterable, Identifiable, Sendable {
         case .pt: "Portuguese"
         case .it: "Italian"
         case .ko: "Korean"
+        case .th: "Thai"
+        case .ka: "Georgian"
         }
     }
 
@@ -53,6 +55,8 @@ enum TargetLanguage: String, CaseIterable, Identifiable, Sendable {
         case .pt: "PT Português"
         case .it: "IT Italiano"
         case .ko: "KO 한국어"
+        case .th: "TH ไทย"
+        case .ka: "KA ქართული"
         }
     }
 }
@@ -103,7 +107,10 @@ struct RGBA: Sendable, Equatable {
 
     var luma: CGFloat { 0.2126 * r + 0.7152 * g + 0.0722 * b }
 
-    var contrasting: RGBA { luma > 0.55 ? .black : .white }
+    /// ~0.46 is where black and white text have equal contrast (WCAG) on this gamma-encoded luma.
+    var isLight: Bool { luma > 0.46 }
+
+    var contrasting: RGBA { isLight ? .black : .white }
 
     var nsColor: NSColor {
         NSColor(srgbRed: r, green: g, blue: b, alpha: a)

@@ -162,15 +162,10 @@ final class HeaderBar: NSView {
         translateButton.font = lens
             ? PixelFont.ui(size: 13)
             : .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .medium)
-        let translateIcon = symbol("translate") ?? symbol("character.bubble")
-        if lens, let translateIcon {
-            translateButton.image = translateIcon.withSymbolConfiguration(.init(hierarchicalColor: .white))
-        } else {
-            translateButton.image = translateIcon
-        }
+        translateButton.image = symbol("translate") ?? symbol("character.bubble")
         translateButton.title = "Перевести"
         translateButton.imagePosition = .imageLeading
-        translateButton.contentTintColor = lens ? .white : .labelColor
+        translateButton.contentTintColor = .labelColor
 
         lockButton.image = nil
         lockButton.title = ""

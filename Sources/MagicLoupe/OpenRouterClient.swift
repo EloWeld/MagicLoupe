@@ -28,13 +28,6 @@ struct OpenRouterClient: Sendable {
     var model: String
 
     func translate(blocks: [(id: Int, text: String)], to language: TargetLanguage) async throws -> [Int: String] {
-        guard !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw OpenRouterError.emptyKey
-        }
-        guard let url = URL(string: "https://openrouter.ai/api/v1/chat/completions") else {
-            throw OpenRouterError.badURL
-        }
-
         let listed = blocks.map { "[\($0.id)] \($0.text)" }.joined(separator: "\n")
         let system = """
         You are a machine translator. Your only job is to translate on-screen UI and document text.
@@ -45,17 +38,37 @@ struct OpenRouterClient: Sendable {
         Return the same ids. No markdown, no extra keys.
         """
 
-        let body = ChatRequest(
-            model: model,
-            temperature: 0,
-            messages: [
-                .init(role: "system", content: system),
-                .init(
-                    role: "user",
-                    content: "Translate the following blocks into \(language.promptName):\n\(listed)"
-                ),
-            ]
-        )
+        return try await complete([
+            .init(role: "system", content: .text(system)),
+            .init(
+                role: "user",
+                content: .text("Translate the following blocks into \(language.promptName):\n\(listed)")
+            ),
+        ])
+    }
+
+    /// For scripts Vision can't read (Georgian, …): the model reads the picture itself.
+    /// Returns the whole translation under id 0, or nothing when the frame has no text.
+    func translate(image jpeg: Data, to language: TargetLanguage) async throws -> [Int: String] {
+        let prompt = """
+        Read all text in this screenshot and translate it into \(language.promptName), keeping line breaks.
+        Preserve numbers, brand names and code identifiers.
+        Reply with JSON only: {"blocks":[{"id":0,"text":"..."}]}
+        If there is no readable text, reply {"blocks":[{"id":0,"text":""}]}. No markdown, no extra keys.
+        """
+        return try await complete([
+            .init(role: "user", content: .image(prompt: prompt, jpeg: jpeg)),
+        ])
+    }
+
+    private func complete(_ messages: [ChatRequest.Message]) async throws -> [Int: String] {
+        guard !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw OpenRouterError.emptyKey
+        }
+        guard let url = URL(string: "https://openrouter.ai/api/v1/chat/completions") else {
+            throw OpenRouterError.badURL
+        }
+        let body = ChatRequest(model: model, temperature: 0, messages: messages)
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -104,7 +117,36 @@ private struct ChatRequest: Encodable {
 
     struct Message: Encodable {
         let role: String
-        let content: String
+        let content: Content
+    }
+
+    enum Content: Encodable {
+        case text(String)
+        case image(prompt: String, jpeg: Data)
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.singleValueContainer()
+            switch self {
+            case .text(let text):
+                try container.encode(text)
+            case .image(let prompt, let jpeg):
+                let url = "data:image/jpeg;base64,\(jpeg.base64EncodedString())"
+                try container.encode([
+                    Part(type: "text", text: prompt, image_url: nil),
+                    Part(type: "image_url", text: nil, image_url: .init(url: url)),
+                ])
+            }
+        }
+    }
+
+    struct Part: Encodable {
+        let type: String
+        let text: String?
+        let image_url: ImageURL?
+
+        struct ImageURL: Encodable {
+            let url: String
+        }
     }
 }
 

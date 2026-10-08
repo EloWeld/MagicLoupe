@@ -181,7 +181,7 @@ final class OverlayBlockView: NSView {
         plate.isHidden = false
         plate.cornerRadius = min(skin.chipRadius, max(4, bounds.height * 0.22))
         plate.tint = block.background.nsColor
-        if block.background.luma > 0.55 {
+        if block.background.isLight {
             appearance = NSAppearance(named: .vibrantLight)
         } else {
             appearance = NSAppearance(named: .vibrantDark)

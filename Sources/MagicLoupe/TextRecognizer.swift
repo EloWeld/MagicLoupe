@@ -13,19 +13,11 @@ enum TextRecognizer {
         let request = VNRecognizeTextRequest()
         request.recognitionLevel = .accurate
         request.usesLanguageCorrection = true
-        request.recognitionLanguages = [
-            "en-US", "fr-FR", "de-DE", "es-ES", "it-IT", "pt-BR",
-            "zh-Hans", "zh-Hant",
-        ]
+        // A fixed language list silently drops every script outside it (Thai, CJK, …).
+        request.automaticallyDetectsLanguage = true
         request.minimumTextHeight = 0.012
 
-        let handler = VNImageRequestHandler(cgImage: image, options: [:])
-        do {
-            try handler.perform([request])
-        } catch {
-            request.recognitionLanguages = ["en-US", "zh-Hans"]
-            try handler.perform([request])
-        }
+        try VNImageRequestHandler(cgImage: image, options: [:]).perform([request])
 
         let observations = request.results ?? []
         let imgW = CGFloat(image.width)

@@ -14,7 +14,7 @@ A menu-bar loupe for macOS. Frame any on-screen text, translate it, and leave th
 
 The app lives in the menu bar. There is no Dock icon.
 
-Current UI is Russian. Target languages include English, Russian, Chinese, Japanese, Korean, German, French, Spanish, Portuguese, and Italian.
+Current UI is Russian. Target languages include English, Russian, Chinese, Japanese, Korean, German, French, Spanish, Portuguese, Italian, Thai, and Georgian.
 
 ## Install
 

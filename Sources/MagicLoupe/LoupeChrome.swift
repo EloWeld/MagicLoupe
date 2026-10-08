@@ -127,7 +127,11 @@ final class GlassBackdrop: NSView {
                 glass.cornerRadius = cornerRadius
                 glass.tintColor = tint
             }
-            wash.layer?.backgroundColor = NSColor.clear.cgColor
+            // Liquid Glass picks light/dark from whatever is behind it, not from our
+            // appearance; an obscuring chip must show the sampled color its text was picked for.
+            wash.layer?.backgroundColor = weight == .obscure
+                ? tint?.withAlphaComponent(0.85).cgColor ?? NSColor.clear.cgColor
+                : NSColor.clear.cgColor
         } else {
             plate?.layer?.cornerRadius = cornerRadius
             plate?.layer?.cornerCurve = .continuous
