@@ -84,6 +84,11 @@ final class GlassBackdrop: NSView {
     @available(*, unavailable)
     required init?(coder: NSCoder) { nil }
 
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        applyChrome()
+    }
+
     override func layout() {
         super.layout()
         plate?.frame = bounds
@@ -128,10 +133,14 @@ final class GlassBackdrop: NSView {
                 glass.tintColor = tint
             }
             // Liquid Glass picks light/dark from whatever is behind it, not from our
-            // appearance; an obscuring chip must show the sampled color its text was picked for.
-            wash.layer?.backgroundColor = weight == .obscure
-                ? tint?.withAlphaComponent(0.85).cgColor ?? NSColor.clear.cgColor
-                : NSColor.clear.cgColor
+            // appearance. Chips show the sampled color their text was picked for; chrome
+            // shows the system background so label colors stay legible over a white page.
+            let fill = weight == .obscure
+                ? tint?.withAlphaComponent(0.85)
+                : NSColor.windowBackgroundColor.withAlphaComponent(0.75)
+            effectiveAppearance.performAsCurrentDrawingAppearance {
+                wash.layer?.backgroundColor = (fill ?? .clear).cgColor
+            }
         } else {
             plate?.layer?.cornerRadius = cornerRadius
             plate?.layer?.cornerCurve = .continuous
