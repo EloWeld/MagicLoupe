@@ -1,4 +1,4 @@
-# Magic Loupe
+# LangLens
 
 <p align="center">
   <img src="https://img.shields.io/badge/macOS-14%2B-000000?logo=apple&logoColor=white" alt="macOS 14+">
@@ -9,7 +9,7 @@
 A menu-bar loupe for macOS. Frame any on-screen text, translate it, and leave the translation sitting on top of the original — same place, same size, under glass.
 
 <p align="center">
-  <img src="docs/demo.gif" alt="Magic Loupe framing a Discord thread and overlaying a Russian, then Japanese, translation" width="720">
+  <img src="docs/demo.gif" alt="LangLens framing a Discord thread and overlaying a Russian, then Japanese, translation" width="720">
 </p>
 
 The app lives in the menu bar. There is no Dock icon.
@@ -20,8 +20,8 @@ Current UI is Russian. Target languages include English, Russian, Chinese, Japan
 
 macOS 14 or later.
 
-1. Download `MagicLoupe-*-macos.zip` from [Releases](https://github.com/mtglitch/magic-loupe/releases/latest).
-2. Unzip and drag **Magic Loupe** into `/Applications`, or open it in place.
+1. Download `LangLens-*-macos.zip` from [Releases](https://github.com/mtglitch/magic-loupe/releases/latest).
+2. Unzip and drag **LangLens** into `/Applications`, or open it in place.
 3. If Gatekeeper blocks it, right-click the app → **Open** → **Open**. A double-click is not enough until macOS has seen that confirmation once.
 
 Unsigned or ad-hoc builds are expected until a Developer ID + notarization pass is wired up. After that, the same zip opens like any other Mac app.
@@ -32,7 +32,7 @@ From source, after installing Xcode or the Command Line Tools:
 make run
 ```
 
-That compiles a debug build and opens `~/Applications/MagicLoupe.app`.
+That compiles a debug build and opens `~/Applications/LangLens.app`.
 
 ## First launch
 
@@ -56,7 +56,7 @@ Esc (or the close control) hides the loupe. It does not quit the app.
 
 ## Privacy
 
-Magic Loupe is a screen-reading tool. The honest version of what that means:
+LangLens is a screen-reading tool. The honest version of what that means:
 
 | What | Where it goes |
 | --- | --- |
@@ -74,7 +74,7 @@ There is no account, no telemetry, no update ping.
 Swift 6, AppKit, Swift Package Manager. No Xcode project.
 
 ```bash
-make build      # debug .app → ~/Applications/MagicLoupe.app
+make build      # debug .app → ~/Applications/LangLens.app
 make run        # build and open
 make release    # optimized .app, same install path
 ```
@@ -88,7 +88,7 @@ Signing is ad-hoc unless `CODESIGN_IDENTITY` is set, or a single **Developer ID 
 One script bumps the version, builds a universal zip, and can publish a GitHub Release.
 
 ```bash
-./scripts/release.sh 0.2.0              # dist/MagicLoupe-0.2.0-macos.zip
+./scripts/release.sh 0.2.0              # dist/LangLens-0.2.0-macos.zip
 ./scripts/release.sh 0.2.0 --github     # commit, tag v0.2.0, push, gh release
 ./scripts/release.sh --dry-run
 ```

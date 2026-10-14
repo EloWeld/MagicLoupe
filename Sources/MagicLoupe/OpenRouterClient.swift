@@ -27,24 +27,41 @@ struct OpenRouterClient: Sendable {
     var apiKey: String
     var model: String
 
-    func translate(blocks: [(id: Int, text: String)], to language: TargetLanguage) async throws -> [Int: String] {
-        let listed = blocks.map { "[\($0.id)] \($0.text)" }.joined(separator: "\n")
+    /// `box` is [ymin, xmin, ymax, xmax] on a 0–1000 scale of the screenshot.
+    func translate(
+        blocks: [(id: Int, text: String, box: [Int])],
+        image jpeg: Data?,
+        to language: TargetLanguage
+    ) async throws -> [Int: String] {
+        let listed = blocks.map { block in
+            jpeg == nil ? "[\(block.id)] \(block.text)" : "[\(block.id)] box=\(block.box) \(block.text)"
+        }.joined(separator: "\n")
+        // OCR turns scripts it can't read (Georgian, …) into Latin garbage; the screenshot is the truth.
+        let reading = jpeg == nil ? "" : """
+        You also get a screenshot. Each block has a box [ymin, xmin, ymax, xmax] on a 0-1000 scale of it.
+        The OCR text is often wrong, especially for Georgian, Armenian and other non-Latin scripts.
+        For every block, read the real text inside its box on the screenshot and translate that, not the OCR text.
+
+        """
         let system = """
         You are a machine translator. Your only job is to translate on-screen UI and document text.
         Target language: \(language.promptName).
-        Translate EVERY block into \(language.englishName). Do not copy the source if it is in another language.
+        \(reading)Translate EVERY block into \(language.englishName). Do not copy the source if it is in another language.
         Keep short labels short. Preserve numbers, brand names and code identifiers.
         Reply with JSON only: {"blocks":[{"id":0,"text":"..."}]}
         Return the same ids. No markdown, no extra keys.
         """
+        let ask = "Translate the following blocks into \(language.promptName):\n\(listed)"
 
-        return try await complete([
-            .init(role: "system", content: .text(system)),
-            .init(
-                role: "user",
-                content: .text("Translate the following blocks into \(language.promptName):\n\(listed)")
-            ),
-        ])
+        guard let jpeg else {
+            return try await complete([.init(role: "system", content: .text(system)), .init(role: "user", content: .text(ask))])
+        }
+        do {
+            return try await complete([.init(role: "system", content: .text(system)), .init(role: "user", content: .image(prompt: ask, jpeg: jpeg))])
+        } catch OpenRouterError.http(let code, _) where code == 400 || code == 404 {
+            // Text-only model: OpenRouter refuses image input. Fall back to the OCR text alone.
+            return try await translate(blocks: blocks, image: nil, to: language)
+        }
     }
 
     /// For scripts Vision can't read (Georgian, …): the model reads the picture itself.
@@ -76,7 +93,7 @@ struct OpenRouterClient: Sendable {
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("https://github.com/mtglitch/magic-loupe", forHTTPHeaderField: "HTTP-Referer")
-        request.setValue("Magic Loupe", forHTTPHeaderField: "X-Title")
+        request.setValue("LangLens", forHTTPHeaderField: "X-Title")
         request.httpBody = try JSONEncoder().encode(body)
 
         let (data, response) = try await URLSession.shared.data(for: request)

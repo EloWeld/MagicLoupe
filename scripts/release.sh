@@ -105,7 +105,7 @@ extract_notes() {
     return
   fi
   if [[ ! -f "$file" ]]; then
-    echo "Magic Loupe ${VERSION}"
+    echo "LangLens ${VERSION}"
     return
   fi
   python3 - "$file" "$VERSION" <<'PY'
@@ -116,16 +116,16 @@ version = sys.argv[2]
 needle = f"## {version}"
 start = text.find(needle)
 if start < 0:
-    print(f"Magic Loupe {version}")
+    print(f"LangLens {version}")
     raise SystemExit
 start = text.find("\n", start)
 if start < 0:
-    print(f"Magic Loupe {version}")
+    print(f"LangLens {version}")
     raise SystemExit
 start += 1
 end = text.find("\n## ", start)
 body = text[start:end if end >= 0 else None].strip()
-print(body or f"Magic Loupe {version}")
+print(body or f"LangLens {version}")
 PY
 }
 
@@ -133,7 +133,7 @@ echo "Version  ${VERSION}  (was ${CURRENT})"
 echo "Build    ${BUILD}"
 
 if [[ "$DRY" -eq 1 ]]; then
-  echo "dry-run: would write Info.plist, build, zip to dist/MagicLoupe-${VERSION}-macos.zip"
+  echo "dry-run: would write Info.plist, build, zip to dist/LangLens-${VERSION}-macos.zip"
   [[ "$PUBLISH" -eq 1 ]] && echo "dry-run: would tag v${VERSION} and create a GitHub Release"
   exit 0
 fi
@@ -164,8 +164,8 @@ if ! swift build "${BUILD_ARGS[@]}" "${INFOLINK[@]}"; then
 fi
 
 DIST="$ROOT/dist"
-APP="$DIST/MagicLoupe.app"
-ZIP="$DIST/MagicLoupe-${VERSION}-macos.zip"
+APP="$DIST/LangLens.app"
+ZIP="$DIST/LangLens-${VERSION}-macos.zip"
 rm -rf "$APP" "$ZIP"
 mkdir -p "$DIST"
 
@@ -174,7 +174,7 @@ PACKAGE_APP_DEST="$APP" PACKAGE_INSTALL_LOCAL=0 \
 
 if [[ -n "${NOTARY_PROFILE:-}" ]]; then
   echo "Notarizing with profile '$NOTARY_PROFILE'…"
-  NOTARY_ZIP="$DIST/MagicLoupe-${VERSION}-submit.zip"
+  NOTARY_ZIP="$DIST/LangLens-${VERSION}-submit.zip"
   ditto -c -k --keepParent --norsrc --noextattr --noacl "$APP" "$NOTARY_ZIP"
   xcrun notarytool submit "$NOTARY_ZIP" --keychain-profile "$NOTARY_PROFILE" --wait
   xcrun stapler staple "$APP"
@@ -235,13 +235,13 @@ EOF
 )"
 fi
 
-git tag -a "v${VERSION}" -m "Magic Loupe ${VERSION}"
+git tag -a "v${VERSION}" -m "LangLens ${VERSION}"
 git push origin HEAD
 git push origin "v${VERSION}"
 
 NOTES="$(extract_notes)"
 gh release create "v${VERSION}" "$ZIP" \
-  --title "Magic Loupe ${VERSION}" \
+  --title "LangLens ${VERSION}" \
   --notes "$NOTES"
 
 echo

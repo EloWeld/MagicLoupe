@@ -12,7 +12,7 @@ release:
 	bash scripts/package-app.sh release
 
 run: build
-	open "$$HOME/Applications/MagicLoupe.app"
+	open "$$HOME/Applications/LangLens.app"
 
 # make dist VERSION=0.2.0
 dist:

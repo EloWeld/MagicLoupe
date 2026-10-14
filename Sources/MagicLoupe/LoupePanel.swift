@@ -27,6 +27,6 @@ final class LoupePanel: NSPanel {
         isFloatingPanel = true
         becomesKeyOnlyIfNeeded = false
         minSize = NSSize(width: 312, height: 172)
-        title = "Magic Loupe"
+        title = "LangLens"
     }
 }

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Assemble MagicLoupe.app from the SwiftPM binary and codesign it.
+# Assemble LangLens.app from the SwiftPM binary and codesign it.
 # Does not compile — run `swift build` first (see Makefile / scripts/release.sh).
 set -euo pipefail
 
@@ -24,9 +24,9 @@ if [[ ! -x "$BINARY" ]]; then
   exit 1
 fi
 
-APP="${PACKAGE_APP_DEST:-$ROOT/.build/App/MagicLoupe.app}"
+APP="${PACKAGE_APP_DEST:-$ROOT/.build/App/LangLens.app}"
 INSTALL_LOCAL="${PACKAGE_INSTALL_LOCAL:-1}"
-STABLE="$HOME/Applications/MagicLoupe.app"
+STABLE="$HOME/Applications/LangLens.app"
 
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"

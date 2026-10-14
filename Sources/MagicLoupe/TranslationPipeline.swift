@@ -110,15 +110,20 @@ final class TranslationPipeline {
             model.status = .translating
             let apiKey = try KeychainStore.load()
             let client = OpenRouterClient(apiKey: apiKey, model: model.modelSlug)
+            let jpeg = Self.jpeg(image)
             let translated: [Int: String]
             if readByModel {
-                guard let jpeg = NSBitmapImageRep(cgImage: image)
-                    .representation(using: .jpeg, properties: [.compressionFactor: 0.85])
-                else { throw OpenRouterError.emptyResponse }
+                guard let jpeg else { throw OpenRouterError.emptyResponse }
                 translated = try await client.translate(image: jpeg, to: model.targetLanguage)
             } else {
                 translated = try await client.translate(
-                    blocks: blocks.map { (id: $0.id, text: $0.text) },
+                    blocks: blocks.map { block in
+                        let r = block.rect
+                        let box = [r.minY / rect.height, r.minX / rect.width, r.maxY / rect.height, r.maxX / rect.width]
+                            .map { Int(($0 * 1000).rounded()) }
+                        return (id: block.id, text: block.text, box: box)
+                    },
+                    image: jpeg,
                     to: model.targetLanguage
                 )
             }
@@ -148,10 +153,34 @@ final class TranslationPipeline {
             return
         } catch {
             if (error as? CaptureError) == .permissionNeeded {
-                model.status = .error("Нет записи экрана. Меню Loupe → Разрешения")
+                model.status = .error("Нет записи экрана. Меню LangLens → Разрешения")
             } else {
                 model.status = .error(error.localizedDescription)
             }
         }
+    }
+
+    /// Long side capped so a full-screen Retina frame stays under provider image limits (~5 MB).
+    private static func jpeg(_ image: CGImage, maxSide: CGFloat = 2560) -> Data? {
+        var source = image
+        let scale = maxSide / CGFloat(max(image.width, image.height))
+        if scale < 1 {
+            let w = Int(CGFloat(image.width) * scale)
+            let h = Int(CGFloat(image.height) * scale)
+            guard let ctx = CGContext(
+                data: nil,
+                width: w,
+                height: h,
+                bitsPerComponent: 8,
+                bytesPerRow: 0,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+            ) else { return nil }
+            ctx.interpolationQuality = .high
+            ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
+            guard let scaled = ctx.makeImage() else { return nil }
+            source = scaled
+        }
+        return NSBitmapImageRep(cgImage: source).representation(using: .jpeg, properties: [.compressionFactor: 0.85])
     }
 }

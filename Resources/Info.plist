@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Magic Loupe</string>
+	<string>LangLens</string>
 	<key>CFBundleExecutable</key>
 	<string>MagicLoupe</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Magic Loupe</string>
+	<string>LangLens</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -25,10 +25,10 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSAudioCaptureUsageDescription</key>
-	<string>Screen Recording on macOS includes audio capture permission, which Magic Loupe does not use.</string>
+	<string>Screen Recording on macOS includes audio capture permission, which LangLens does not use.</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSScreenCaptureUsageDescription</key>
-	<string>Magic Loupe captures the area under the floating frame to read and translate on-screen text.</string>
+	<string>LangLens captures the area under the floating frame to read and translate on-screen text.</string>
 </dict>
 </plist>

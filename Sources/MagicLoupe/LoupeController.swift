@@ -104,7 +104,7 @@ final class LoupeController {
             backing: .buffered,
             defer: false
         )
-        window.title = "Настройки Magic Loupe"
+        window.title = "Настройки LangLens"
         window.titlebarAppearsTransparent = true
         window.isOpaque = false
         window.backgroundColor = .clear

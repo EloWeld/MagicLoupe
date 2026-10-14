@@ -182,10 +182,10 @@ struct AccessWallView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Image(systemName: "plus.magnifyingglass")
+            Image(systemName: "text.viewfinder")
                 .font(.system(size: 28, weight: .medium))
                 .foregroundStyle(.primary.opacity(0.85))
-            Text("Magic Loupe")
+            Text("LangLens")
                 .font(.system(size: 22, weight: .semibold))
             Text("Нужен доступ, чтобы читать текст под лупой и переводить его поверх экрана.")
                 .font(.system(size: 13))

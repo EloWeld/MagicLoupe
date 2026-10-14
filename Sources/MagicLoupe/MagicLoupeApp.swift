@@ -66,13 +66,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func installStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         guard let button = item.button else { return }
-        button.title = "Loupe"
-        if let image = NSImage(systemSymbolName: "plus.magnifyingglass", accessibilityDescription: "Magic Loupe") {
+        if let image = NSImage(systemSymbolName: "text.viewfinder", accessibilityDescription: "LangLens") {
             image.isTemplate = true
             button.image = image
-            button.imagePosition = .imageLeading
+            button.imagePosition = .imageOnly
         }
-        button.toolTip = "Magic Loupe"
+        button.toolTip = "LangLens"
         button.target = self
         button.action = #selector(statusItemClicked)
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -95,7 +94,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(makeMenuItem("Настройки…", #selector(openSettings), ","))
         menu.addItem(makeMenuItem("Перезапустить", #selector(relaunch)))
         menu.addItem(.separator())
-        menu.addItem(makeMenuItem("Выйти из Magic Loupe", #selector(quit), "q"))
+        menu.addItem(makeMenuItem("Выйти из LangLens", #selector(quit), "q"))
         statusMenu = menu
         statusItem = item
     }
